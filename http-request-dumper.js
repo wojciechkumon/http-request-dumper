@@ -1,8 +1,12 @@
 const fs = require('fs');
 const http = require('http');
 
+let LISTEN_PORT = 3000;
+if (process.argv.length >= 3) {
+    LISTEN_PORT = process.argv[2];
+}
+
 const LISTEN_HOSTNAME = '0.0.0.0';
-const LISTEN_PORT = 3000;
 const REQUESTS_DUMP_FILE = 'HTTP_requests.log';
 
 const wrapRequestWithMetadata = data =>
