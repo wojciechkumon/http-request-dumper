@@ -1,0 +1,11 @@
+{
+  "name": "http-request-dumper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "http-request-dumper.js",
+  "scripts": {
+    "start": "node http-request-dumper.js"
+  },
+  "author": "Wojciech Kumoń",
+  "license": "MIT"
+}
