@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const listRequestLogs = require('./logs-list-handler');
+const serveLogFile = require('./log-file-server');
 const deleteLogs = require('./logs-delete-handler');
 const saveLog = require('./logs-saving-handler');
 
@@ -14,15 +15,7 @@ const REQUEST_DUMPS_DIR = 'requests';
 
 
 const requestFileRegex = new RegExp('/requests/(\\S+)');
-const serveLogFile = (request, response) => {
-    const requestUri = request.url;
-
-    request.on('data', chunk => {});
-    request.on('end', () => {
-        response.writeHead(200);
-        response.end();
-    });
-};
+const fileNameGroup = 1;
 
 const ignoreRequest = (request, response) => {
     request.on('data', chunk => {});
@@ -41,7 +34,7 @@ const server = http.createServer((request, response) => {
     } else if (httpMethod === 'DELETE' && requestUri === '/requests') {
         deleteLogs(request, response, REQUEST_DUMPS_DIR);
     } else if (httpMethod === 'GET' && requestFileRegex.test(requestUri)) {
-        serveLogFile(request, response);
+        serveLogFile(request, response, REQUEST_DUMPS_DIR, requestFileRegex.exec(requestUri)[fileNameGroup]);
     } else if (requestUri === '/favicon.ico') {
         ignoreRequest(request, response);
     } else {

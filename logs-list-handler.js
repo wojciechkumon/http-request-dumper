@@ -5,7 +5,6 @@ const htmlTemplate = fs.readFileSync('logs-list-template.html', 'utf8');
 const listRequestLogs = (request, response, requestDumpsDir) => {
     request.on('data', chunk => {});
     request.on('end', () => {
-
         fs.readdir(requestDumpsDir, (err, files) => {
             if (err) {
                 response.writeHead(500);
@@ -21,7 +20,7 @@ const listRequestLogs = (request, response, requestDumpsDir) => {
             const filledTemplate = htmlTemplate.replace('{INSERT_LINKS_HERE}', linksHtml);
             response.write(filledTemplate);
             response.end();
-        })
+        });
     });
 };
 
