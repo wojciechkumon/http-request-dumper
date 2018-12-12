@@ -1,7 +1,7 @@
 const fs = require('fs');
-const path = require('path');
 const http = require('http');
 const listRequestLogs = require('./logs-list-handler');
+const deleteLogs = require('./logs-delete-handler');
 
 let LISTEN_PORT = 3000;
 if (process.argv.length >= 3) {
@@ -61,23 +61,6 @@ const onOtherRequest = (request, response, httpMethod, requestUri) => {
     });
 };
 
-const deleteLogs = (request, response) => {
-    request.on('data', chunk => {});
-    request.on('end', () => {
-        response.writeHead(200);
-        response.end();
-    });
-    fs.readdir(REQUEST_DUMPS_DIR, (err, files) => {
-        if (err) console.error(err);
-
-        for (const file of files) {
-            fs.unlink(path.join(REQUEST_DUMPS_DIR, file), err => {
-                if (err) console.error(err);
-            });
-        }
-    });
-};
-
 const requestFileRegex = new RegExp('/requests/(\\S+)');
 const serveLogFile = (request, response, requestUri) => {
     request.on('data', chunk => {});
@@ -94,7 +77,7 @@ const server = http.createServer((request, response) => {
     if (httpMethod === 'GET' && requestUri === '/requests') {
         listRequestLogs(request, response, REQUEST_DUMPS_DIR);
     } else if (httpMethod === 'DELETE' && requestUri === '/requests') {
-        deleteLogs(request, response, requestUri);
+        deleteLogs(request, response, REQUEST_DUMPS_DIR);
     } else if (httpMethod === 'GET' && requestFileRegex.test(requestUri)) {
         serveLogFile(request, response, requestUri);
     } else {
