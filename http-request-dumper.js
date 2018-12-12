@@ -1,5 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 const http = require('http');
+const listRequestLogs = require('./logs-list-handler');
 
 let LISTEN_PORT = 3000;
 if (process.argv.length >= 3) {
@@ -7,7 +9,7 @@ if (process.argv.length >= 3) {
 }
 
 const LISTEN_HOSTNAME = '0.0.0.0';
-const REQUEST_DUMPS_DIR = `${__dirname }/requests`;
+const REQUEST_DUMPS_DIR = 'requests';
 
 const wrapRequestWithMetadata = data =>
     `New request (${new Date().toUTCString()}):\r\n${data}`;
@@ -59,11 +61,20 @@ const onOtherRequest = (request, response, httpMethod, requestUri) => {
     });
 };
 
-const listRequestLogs = (request, response) => {
+const deleteLogs = (request, response) => {
     request.on('data', chunk => {});
     request.on('end', () => {
         response.writeHead(200);
         response.end();
+    });
+    fs.readdir(REQUEST_DUMPS_DIR, (err, files) => {
+        if (err) console.error(err);
+
+        for (const file of files) {
+            fs.unlink(path.join(REQUEST_DUMPS_DIR, file), err => {
+                if (err) console.error(err);
+            });
+        }
     });
 };
 
@@ -81,7 +92,9 @@ const server = http.createServer((request, response) => {
     const requestUri = request.url;
 
     if (httpMethod === 'GET' && requestUri === '/requests') {
-        listRequestLogs(request, response);
+        listRequestLogs(request, response, REQUEST_DUMPS_DIR);
+    } else if (httpMethod === 'DELETE' && requestUri === '/requests') {
+        deleteLogs(request, response, requestUri);
     } else if (httpMethod === 'GET' && requestFileRegex.test(requestUri)) {
         serveLogFile(request, response, requestUri);
     } else {
