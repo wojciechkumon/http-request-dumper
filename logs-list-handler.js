@@ -15,6 +15,7 @@ const listRequestLogs = (request, response, requestDumpsDir) => {
 
             response.writeHead(200);
             const linksHtml = files
+                .sort((a, b) => b.localeCompare(a))
                 .map(file => buildSingleLinkHtml(`/${requestDumpsDir}/${file}`, file))
                 .join('\r\n');
             const filledTemplate = htmlTemplate.replace('{INSERT_LINKS_HERE}', linksHtml);
