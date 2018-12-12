@@ -4,7 +4,7 @@ const path = require('path');
 const deleteLogs = (request, response, requestDumpsDir) => {
     request.on('data', chunk => {});
     request.on('end', () => {
-        response.writeHead(200);
+        response.writeHead(204);
         response.end();
     });
     fs.readdir(requestDumpsDir, (err, files) => {

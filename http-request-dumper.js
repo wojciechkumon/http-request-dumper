@@ -58,7 +58,7 @@ const buildServer = requestDumpsDir => {
 const ignoreRequest = (request, response) => {
     request.on('data', chunk => {});
     request.on('end', () => {
-        response.writeHead(200);
+        response.writeHead(204);
         response.end();
     });
 };

@@ -13,6 +13,7 @@ const listRequestLogs = (request, response, requestDumpsDir) => {
                 return;
             }
 
+            response.setHeader('Content-Type', 'text/html');
             response.writeHead(200);
             const linksHtml = files
                 .sort((a, b) => b.localeCompare(a))

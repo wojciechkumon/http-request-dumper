@@ -10,6 +10,7 @@ const serveLogFile = (request, response, requestDumpsDir, fileName) => {
                 return;
             }
 
+            response.setHeader('Content-Type', 'text/plain');
             response.writeHead(200);
             response.write(fileContent);
             response.end();
