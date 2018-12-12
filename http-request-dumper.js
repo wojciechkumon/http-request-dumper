@@ -16,7 +16,7 @@ const writeRequestToFile = (data) =>
     fs.appendFile(
         REQUESTS_DUMP_FILE,
         wrapRequestWithMetadata(data),
-        () => console.log(`End of writing to file`)
+        () => {}
     );
 
 const buildHttpHeaders = rawHeaders => {
@@ -35,12 +35,7 @@ const buildRawHttpRequest = (httpMethod, uri, httpVersion, headersArray, body) =
     '\r\n' +
     body;
 
-const server = http.createServer((request, response) => {
-    const httpMethod = request.method.toUpperCase();
-    const requestUri = request.url;
-
-    console.log(`Incoming request. Method: ${httpMethod}, URI: ${requestUri}`);
-
+const onOtherRequest = (request, response, httpMethod, requestUri) => {
     const rawBodyChunks = [];
     request.on('data', chunk => {
         rawBodyChunks.push(chunk);
@@ -54,9 +49,38 @@ const server = http.createServer((request, response) => {
         const headers = buildHttpHeaders(request.rawHeaders);
         const body = rawBodyChunks.join('');
         const fullRequest = buildRawHttpRequest(httpMethod, requestUri, httpVersion, headers, body);
-        console.log(fullRequest);
         writeRequestToFile(fullRequest);
     });
+};
+
+const listRequestLogs = (request, response) => {
+    request.on('data', chunk => {});
+    request.on('end', () => {
+        response.writeHead(200);
+        response.end();
+    });
+};
+
+const requestFileRegex = new RegExp('/requests/(\\S+)');
+const serveLogFile = (request, response, requestUri) => {
+    request.on('data', chunk => {});
+    request.on('end', () => {
+        response.writeHead(200);
+        response.end();
+    });
+};
+
+const server = http.createServer((request, response) => {
+    const httpMethod = request.method.toUpperCase();
+    const requestUri = request.url;
+
+    if (httpMethod === 'GET' && requestUri === '/requests') {
+        listRequestLogs(request, response);
+    } else if (httpMethod === 'GET' && requestFileRegex.test(requestUri)) {
+        serveLogFile(request, response, requestUri);
+    } else {
+        onOtherRequest(request, response, httpMethod, requestUri);
+    }
 });
 
 // start listening server
