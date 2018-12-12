@@ -1,12 +1,16 @@
 {
+  "author": "Wojciech Kumoń <wojciechkumon@gmail.com>",
   "name": "http-request-dumper",
   "version": "1.0.0",
-  "description": "",
+  "description": "Utility server to persist incoming requests",
   "main": "http-request-dumper.js",
   "scripts": {
     "start": "node http-request-dumper.js"
   },
-  "author": "Wojciech Kumoń",
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/wojtas626/http-request-dumper/http-request-dumper.git"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=10.14.1"
