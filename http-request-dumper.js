@@ -7,17 +7,23 @@ if (process.argv.length >= 3) {
 }
 
 const LISTEN_HOSTNAME = '0.0.0.0';
-const REQUESTS_DUMP_FILE = 'HTTP_requests.log';
+const REQUEST_DUMPS_DIR = `${__dirname }/requests`;
 
 const wrapRequestWithMetadata = data =>
-    `New request (${new Date().toUTCString()}):\r\n${data}\r\n\r\n`;
+    `New request (${new Date().toUTCString()}):\r\n${data}`;
 
-const writeRequestToFile = (data) =>
-    fs.appendFile(
-        REQUESTS_DUMP_FILE,
+const fileNameReplaceRegex = /[:.]/g;
+const getNewFileName = () =>
+    new Date().toISOString().replace(fileNameReplaceRegex, '_');
+
+const writeRequestToFile = (data) => {
+    const file = `${REQUEST_DUMPS_DIR}/${getNewFileName()}.log`;
+    fs.writeFile(
+        file,
         wrapRequestWithMetadata(data),
-        () => {}
+        err => {if (err) console.error(err)}
     );
+};
 
 const buildHttpHeaders = rawHeaders => {
     const headers = [];
@@ -83,6 +89,11 @@ const server = http.createServer((request, response) => {
     }
 });
 
-// start listening server
+fs.exists(REQUEST_DUMPS_DIR, exists => {
+    if (!exists) {
+        fs.mkdir(REQUEST_DUMPS_DIR, err => {if (err) throw err});
+    }
+});
 console.log(`Listening on ${LISTEN_HOSTNAME}:${LISTEN_PORT}`);
 server.listen(LISTEN_PORT, LISTEN_HOSTNAME);
+
