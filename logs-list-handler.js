@@ -2,9 +2,6 @@ const fs = require('fs');
 
 const htmlTemplate = fs.readFileSync('logs-list-template.html', 'utf8');
 
-const buildSingleLinkHtml = (href, text) =>
-    `<a href="${href}" class="list-group-item list-group-item-action">${text}</a>`;
-
 const listRequestLogs = (request, response, requestDumpsDir) => {
     request.on('data', chunk => {});
     request.on('end', () => {
@@ -27,5 +24,8 @@ const listRequestLogs = (request, response, requestDumpsDir) => {
         })
     });
 };
+
+const buildSingleLinkHtml = (href, text) =>
+    `<a href="${href}" class="list-group-item list-group-item-action">${text}</a>`;
 
 module.exports = listRequestLogs;

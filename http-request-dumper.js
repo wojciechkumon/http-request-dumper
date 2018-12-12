@@ -2,6 +2,7 @@ const fs = require('fs');
 const http = require('http');
 const listRequestLogs = require('./logs-list-handler');
 const deleteLogs = require('./logs-delete-handler');
+const saveLog = require('./logs-saving-handler');
 
 let LISTEN_PORT = 3000;
 if (process.argv.length >= 3) {
@@ -11,58 +12,19 @@ if (process.argv.length >= 3) {
 const LISTEN_HOSTNAME = '0.0.0.0';
 const REQUEST_DUMPS_DIR = 'requests';
 
-const wrapRequestWithMetadata = data =>
-    `New request (${new Date().toUTCString()}):\r\n${data}`;
 
-const fileNameReplaceRegex = /[:.]/g;
-const getNewFileName = () =>
-    new Date().toISOString().replace(fileNameReplaceRegex, '_');
+const requestFileRegex = new RegExp('/requests/(\\S+)');
+const serveLogFile = (request, response) => {
+    const requestUri = request.url;
 
-const writeRequestToFile = (data) => {
-    const file = `${REQUEST_DUMPS_DIR}/${getNewFileName()}.log`;
-    fs.writeFile(
-        file,
-        wrapRequestWithMetadata(data),
-        err => {if (err) console.error(err)}
-    );
-};
-
-const buildHttpHeaders = rawHeaders => {
-    const headers = [];
-    for (let i = 0; i < rawHeaders.length / 2; i++) {
-        const headerKey = rawHeaders[2 * i];
-        const headerValue = rawHeaders[2 * i + 1];
-        headers.push(`${headerKey}: ${headerValue}`);
-    }
-    return headers;
-};
-
-const buildRawHttpRequest = (httpMethod, uri, httpVersion, headersArray, body) =>
-    `${httpMethod} ${uri} HTTP/${httpVersion}\r\n` +
-    `${headersArray.join('\r\n')}\r\n` +
-    '\r\n' +
-    body;
-
-const onOtherRequest = (request, response, httpMethod, requestUri) => {
-    const rawBodyChunks = [];
-    request.on('data', chunk => {
-        rawBodyChunks.push(chunk);
-    });
-
+    request.on('data', chunk => {});
     request.on('end', () => {
         response.writeHead(200);
         response.end();
-
-        const httpVersion = request.httpVersion;
-        const headers = buildHttpHeaders(request.rawHeaders);
-        const body = rawBodyChunks.join('');
-        const fullRequest = buildRawHttpRequest(httpMethod, requestUri, httpVersion, headers, body);
-        writeRequestToFile(fullRequest);
     });
 };
 
-const requestFileRegex = new RegExp('/requests/(\\S+)');
-const serveLogFile = (request, response, requestUri) => {
+const ignoreRequest = (request, response) => {
     request.on('data', chunk => {});
     request.on('end', () => {
         response.writeHead(200);
@@ -79,9 +41,11 @@ const server = http.createServer((request, response) => {
     } else if (httpMethod === 'DELETE' && requestUri === '/requests') {
         deleteLogs(request, response, REQUEST_DUMPS_DIR);
     } else if (httpMethod === 'GET' && requestFileRegex.test(requestUri)) {
-        serveLogFile(request, response, requestUri);
+        serveLogFile(request, response);
+    } else if (requestUri === '/favicon.ico') {
+        ignoreRequest(request, response);
     } else {
-        onOtherRequest(request, response, httpMethod, requestUri);
+        saveLog(request, response, REQUEST_DUMPS_DIR);
     }
 });
 
@@ -92,4 +56,3 @@ fs.exists(REQUEST_DUMPS_DIR, exists => {
 });
 console.log(`Listening on ${LISTEN_HOSTNAME}:${LISTEN_PORT}`);
 server.listen(LISTEN_PORT, LISTEN_HOSTNAME);
-
